@@ -15,6 +15,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
+const cookieParser = require("cookie-parser");
+const { doubleCsrfProtection } = require("./middleware/csrf");
 const { WebSocketServer } = require("ws");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
@@ -217,11 +219,26 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:3000").
 app.use(cors({
   origin: (origin, cb) => (!origin || allowedOrigins.includes(origin)) ? cb(null, true) : cb(new Error("CORS blocked")),
   methods: ["GET", "POST", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  // X-CSRF-Token + legacy X-XSRF-Token alias must survive preflight for the
+  // double-submit handshake to work from the browser (see src/config/cors.js).
+  allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "X-XSRF-Token"],
   credentials: true,
 }));
  
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 150, standardHeaders: true, legacyHeaders: true }));
+
+// ─── Cookies & CSRF (issue #1777) ───────────────────────────────────────────
+// Sessions travel in HttpOnly `token` / `refreshToken` cookies (see
+// services/authTokens.js `setAuthCookies`), and middleware/auth.js prefers the
+// cookie over the Authorization header — so browsers attach credentials to
+// cross-site requests automatically and every state-changing route is
+// CSRF-exposed unless validated. cookie-parser must run first because
+// doubleCsrfProtection reads req.cookies (session identifier + signed token).
+// The middleware itself skips safe methods, the /api/auth bootstrap path,
+// health/metrics/docs, API-key routes, and pure Bearer callers with no auth
+// cookie. Decision record: docs/adr/adr-012-cookie-session-transport-csrf.md.
+app.use(cookieParser());
+app.use(doubleCsrfProtection);
  
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/health",            healthRoutes);

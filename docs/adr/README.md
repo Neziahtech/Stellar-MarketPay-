@@ -25,6 +25,7 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 | [ADR-008](./adr-008-redis-session-cache.md) | Redis for Session and Cache Management | Accepted | 2026-05-28 |
 | [ADR-009](./adr-009-websocket-vs-sse.md) | WebSocket vs SSE for Real-Time Updates | Accepted | 2026-05-28 |
 | [ADR-010](./adr-010-cursor-pagination.md) | Cursor-Based Pagination | Accepted | 2026-05-28 |
+| [ADR-012](./adr-012-cookie-session-transport-csrf.md) | Cookie-Based Session Transport with Double-Submit CSRF Protection | Accepted | 2026-10-19 |
 
 ## ADR Categories
 
@@ -37,6 +38,7 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 - **ADR-004**: SEP-10 wallet-based authentication
 - **ADR-005**: End-to-end message encryption
 - **ADR-007**: WebAuthn 2FA implementation
+- **ADR-012**: Cookie session transport + double-submit CSRF protection
 
 ### Storage & Infrastructure
 - **ADR-006**: IPFS for dispute evidence
